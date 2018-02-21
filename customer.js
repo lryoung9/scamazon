@@ -6,7 +6,7 @@
 var inquirer = require("inquirer");
 
 // Require mysql to read and maniplate the product database:
-var mysql = require('mysql');
+var mysql = require("mysql");
 
 var con = mysql.createConnection({
   host: "localhost",
@@ -25,17 +25,30 @@ con.connect(function(err) {
     for (var i = 0; i < result.length; i++) {
     	prodArray.push(result[i].product_name + ": $" + result[i].price);
 	}
-	
+
 	inquirer.prompt([
 		{
 	    	message: "Press <space> to select an item to add to your cart.",
 	    	type: "checkbox",
 	    	name: "products",
+	    	pageSize: prodArray.length,
 	    	choices: prodArray
 	    }
-	]).then(answer)
-	;
-
-  });
+	]).then(function(answers) {
+		var count = 0;
+		if (count < answers.products.length) {
+			for (var j = 0; j < answers.products.length; j++) {
+				inquirer.prompt([
+				{
+					message: `Verify the quantity to order: ${answers.products[j]}`,
+					name: "qty",
+					type: "input",
+					default: 1					
+				}]).then(function(quantity) {
+					count++;
+				})
+			}
+		};
+	});
 });
-
+})

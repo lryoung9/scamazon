@@ -36,19 +36,27 @@ con.connect(function(err) {
 	    }
 	]).then(function(answers) {
 		var count = 0;
-		if (count < answers.products.length) {
-			for (var j = 0; j < answers.products.length; j++) {
+		var productQuantity = {};
+		askProductQuantity();
+
+		function askProductQuantity() {
+			if (count < answers.products.length) {
 				inquirer.prompt([
 				{
-					message: `Verify the quantity to order: ${answers.products[j]}`,
+					message: `Verify the quantity to order: ${answers.products[count]}`,
 					name: "qty",
 					type: "input",
 					default: 1					
 				}]).then(function(quantity) {
 					count++;
-				})
+					productQuantity[answers.products[count]] = quantity.qty;
+					askProductQuantity();
+				});
+			} else {
+				console.log("Done selecting quantity for all products")
 			}
-		};
+			
+		}
 	});
 });
 })

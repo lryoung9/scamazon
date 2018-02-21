@@ -1,1 +1,4 @@
 node_modules/
+seeds.sql
+supervisor.js
+manager.js

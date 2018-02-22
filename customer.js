@@ -15,48 +15,71 @@ var con = mysql.createConnection({
   database: "scamazon"
 });
 
+// function to validate user inputs a number for the quantity prompt
+function validateQty(qty)
+{
+		if (isNaN(qty)) {
+			return "Please enter a number for the quantity."
+		};
+}
+
 con.connect(function(err) {
   if (err) throw err;
-  con.query("SELECT product_name, price FROM products", function (err, result, fields) {
+  con.query("SELECT item_id, product_name, price FROM products", function (err, result, fields) {
     if (err) throw err;
     // create a temporary array to store products from result
     var prodArray = [];
+    // create second temporary array to store products' id numbers
+    var idArray = [];
     // loop through to fill array
     for (var i = 0; i < result.length; i++) {
     	prodArray.push(result[i].product_name + ": $" + result[i].price);
-	}
-
-	inquirer.prompt([
-		{
-	    	message: "Press <space> to select an item to add to your cart.",
-	    	type: "checkbox",
-	    	name: "products",
-	    	pageSize: prodArray.length,
-	    	choices: prodArray
-	    }
-	]).then(function(answers) {
-		var count = 0;
-		var productQuantity = {};
-		askProductQuantity();
-
-		function askProductQuantity() {
-			if (count < answers.products.length) {
-				inquirer.prompt([
-				{
-					message: `Verify the quantity to order: ${answers.products[count]}`,
-					name: "qty",
-					type: "input",
-					default: 1					
-				}]).then(function(quantity) {
-					count++;
-					productQuantity[answers.products[count]] = quantity.qty;
-					askProductQuantity();
-				});
-			} else {
-				console.log("Done selecting quantity for all products")
-			}
-			
+    	idArray.push(result[i].item_id);
 		}
+
+		inquirer.prompt([
+			{
+		    	message: "Press [SPACE] to select an item to add to your cart.",
+		    	type: "checkbox",
+		    	name: "products",
+		    	pageSize: prodArray.length,
+		    	choices: prodArray
+		    }
+		]).then(function(answers) {
+			var count = 0;
+			// temporary object to hold user input for quantity of each cart item
+			var productQuantity = [];
+			askProductQuantity();
+
+			function askProductQuantity() {
+				if (count < answers.products.length) {
+					inquirer.prompt([
+					{
+						message: `Verify the quantity to order: ${answers.products[count]}`,
+						name: "qty",
+						type: "input",
+						validate: validateQty,
+						default: 1
+					}]).then(function(quantity) {
+						// connection.query("SELECT * FROM products", function (err, res) {
+				  //   	select stock_quantity from products where product_name="cat sock"
+				  //   	if (err) throw err;
+				  //   	// if
+				  //   	console.log("Playlist:\n ---------------------------- \n");
+				  //   	console.log(res);
+						// });
+
+						console.log(quantity)
+						productQuantity[answers.products[count]] = parseInt(quantity.qty);
+						count++;
+						askProductQuantity();
+					});
+				} else {
+					console.log("Your cart item(s):")
+					console.log(productQuantity)
+				}
+				
+			}
+		});
 	});
-});
 })

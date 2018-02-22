@@ -29,22 +29,19 @@ con.connect(function(err) {
     if (err) throw err;
     // create a temporary array to store products from result
     var prodArray = [];
-    // create second temporary array to store products' id numbers
-    var idArray = [];
     // loop through to fill array
     for (var i = 0; i < result.length; i++) {
-    	prodArray.push(result[i].product_name + ": $" + result[i].price);
-    	idArray.push(result[i].item_id);
+    	prodArray.push({name: result[i].product_name + ": $" + result[i].price, value: result[i].item_id})
 		}
 
 		inquirer.prompt([
 			{
-		    	message: "Press [SPACE] to select an item to add to your cart.",
-		    	type: "checkbox",
-		    	name: "products",
-		    	pageSize: prodArray.length,
-		    	choices: prodArray
-		    }
+		   	message: "Press [SPACE] to select an item to add to your cart.",
+		   	type: "checkbox",
+		   	name: "products",
+		   	pageSize: prodArray.length,
+		   	choices: prodArray,
+		   }
 		]).then(function(answers) {
 			var count = 0;
 			// temporary object to hold user input for quantity of each cart item
@@ -61,13 +58,9 @@ con.connect(function(err) {
 						validate: validateQty,
 						default: 1
 					}]).then(function(quantity) {
-						// connection.query("SELECT * FROM products", function (err, res) {
-				  //   	select stock_quantity from products where product_name="cat sock"
-				  //   	if (err) throw err;
-				  //   	// if
-				  //   	console.log("Playlist:\n ---------------------------- \n");
-				  //   	console.log(res);
-						// });
+						connection.query("SELECT stock_quantity FROM products WHERE item_id =?", (answers.products[count].value), function (err, res) {
+				    	if (err) throw err;
+						});
 
 						console.log(quantity)
 						productQuantity[answers.products[count]] = parseInt(quantity.qty);

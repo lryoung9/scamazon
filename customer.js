@@ -23,11 +23,16 @@ function validateQty(qty)
 		};
 }
 
+// stores cart items
+var cart = [];
+// stores product name
+var productName;
+// stores product price
+var productPrice;
+
 // function to update product totals
 function askProductQuantity(answers, count) {
 				if (count <= answers.products.length - 1) {
-					console.log(`count is: ${count}`);
-					console.log(`products length is: ${answers.products.length}`);
 					inquirer.prompt([
 					{
 						message: `Verify the quantity to order of ${answers.products[count]}:`,
@@ -36,7 +41,8 @@ function askProductQuantity(answers, count) {
 						// validate: validateQty,
 						default: 1
 					}]).then(function(quantity) {
-						var productName = answers.products[count].split(':')[0];
+						productName = answers.products[count].split(':')[0];
+						productPrice = parseFloat(answers.products[count].split(':')[1]);
 						con.query("SELECT stock_quantity FROM products WHERE product_name=?", productName, function (err, res) {
 				    	if (err) throw err;
 				    	// if quantity > stock_quantity, tell user "Not enough product in inventory"
@@ -46,9 +52,8 @@ function askProductQuantity(answers, count) {
 				    	}
 				    	// else update database stock_quantity and give user total cost
 				    	else {
-				    		console.log("right hurr")
 				    		con.query("UPDATE products SET stock_quantity = ? WHERE product_name=?", [(res[0].stock_quantity - quantity.qty), productName]);
-				    		console.log('also here')
+				    		cart.push(`${quantity.qty} of ${productName}`);
 				    	}
 				    	console.log(quantity);
 				    	count++;
@@ -57,7 +62,8 @@ function askProductQuantity(answers, count) {
 					});
 				} else {
 					console.log("Your cart item(s):")
-					// console.log(productQuantity)
+					console.log(cart);
+					console.log(`Total: ${productPrice}*quantity.qty`)
 				}
 				
 			}

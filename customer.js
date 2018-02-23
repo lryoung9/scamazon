@@ -29,8 +29,16 @@ var cart = [];
 var productName;
 // stores product price
 var productPrice;
+var productQty;
+var cartTotal = 0;
+
 
 // function to update product totals
+function total(x, y) {
+	return x * y;
+	cartTotal += total(x, y);
+}
+
 function askProductQuantity(answers, count) {
 				if (count <= answers.products.length - 1) {
 					inquirer.prompt([
@@ -42,7 +50,8 @@ function askProductQuantity(answers, count) {
 						default: 1
 					}]).then(function(quantity) {
 						productName = answers.products[count].split(':')[0];
-						productPrice = parseFloat(answers.products[count].split(':')[1]);
+						productPrice = parseFloat(answers.products[count].split(': $')[1]);
+						productQty = quantity.qty;
 						con.query("SELECT stock_quantity FROM products WHERE product_name=?", productName, function (err, res) {
 				    	if (err) throw err;
 				    	// if quantity > stock_quantity, tell user "Not enough product in inventory"
@@ -55,7 +64,7 @@ function askProductQuantity(answers, count) {
 				    		con.query("UPDATE products SET stock_quantity = ? WHERE product_name=?", [(res[0].stock_quantity - quantity.qty), productName]);
 				    		cart.push(`${quantity.qty} of ${productName}`);
 				    	}
-				    	console.log(quantity);
+				    	cartTotal += total(productPrice, productQty);
 				    	count++;
 				    	askProductQuantity(answers, count);
 						});
@@ -63,7 +72,7 @@ function askProductQuantity(answers, count) {
 				} else {
 					console.log("Your cart item(s):")
 					console.log(cart);
-					console.log(`Total: ${productPrice}*quantity.qty`)
+					console.log(`Total: $${cartTotal}`)
 				}
 				
 			}
